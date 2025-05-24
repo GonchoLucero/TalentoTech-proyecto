@@ -1,6 +1,8 @@
 package com.techlab;
 
 
+import com.techlab.pedidos.LineaPedido;
+import com.techlab.pedidos.Pedido;
 import com.techlab.productos.Producto;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -11,6 +13,8 @@ public class Main {
     public static void main(String[] args) {
         Scanner entrada = new Scanner(System.in);
         ArrayList<Producto> productos = new ArrayList<>();
+        ArrayList<Pedido> pedidos = new ArrayList<>();
+
         int opcionUsuario = 0;
 
         while (opcionUsuario != 7){
@@ -34,8 +38,8 @@ public class Main {
                 case 2 -> listarProductos(productos);
                 case 3 -> buscarActualizarProducto(productos);
                 case 4 -> eliminarProducto(productos);
-                case 5 -> System.out.println("Crear un pedido");
-                case 6 -> System.out.println("Listar pedidos");
+                case 5 -> crearPedido(productos, pedidos);
+                case 6 -> listarPedidos(pedidos);
                 case 7 -> System.out.println("Saliendo...");
                 default -> System.out.println("Opción no válida.");
             }
@@ -115,5 +119,84 @@ public class Main {
             }
         }
         System.out.println("No existe el producto con el ID ingresado");
+    }
+
+    // CREAR PEDIDOS
+    private static void crearPedido(ArrayList<Producto> productos, ArrayList<Pedido> pedidos) {
+        Scanner entrada = new Scanner(System.in);
+        Pedido nuevoPedido = new Pedido();
+
+        boolean seguirAgregando = true;
+
+        while (seguirAgregando) {
+            System.out.print("Ingrese el ID del producto: ");
+            int id = entrada.nextInt();
+
+            Producto productoSeleccionado = null;
+            for (Producto p : productos) {
+                if (p.getId() == id) {
+                    productoSeleccionado = p;
+                    break;
+                }
+            }
+
+            if (productoSeleccionado == null) {
+                System.out.println("Producto no encontrado.");
+                continue;
+            }
+
+
+            System.out.printf("Producto encontrado -> ID: %d | Nombre: %s | Precio: %.2f | Stock disponible: %d\n",
+                    productoSeleccionado.getId(),
+                    productoSeleccionado.getNombre(),
+                    productoSeleccionado.getPrecio(),
+                    productoSeleccionado.getStock());
+
+            System.out.print("¿Cuántas unidades desea agregar al pedido?: ");
+            int cantidad = entrada.nextInt();
+
+            if (cantidad > productoSeleccionado.getStock()) {
+                System.out.println("Stock insuficiente. Pedido cancelado para este producto.");
+                continue;
+            }
+
+            productoSeleccionado.setStock(productoSeleccionado.getStock() - cantidad);
+            nuevoPedido.agregarLinea(new LineaPedido(productoSeleccionado, cantidad));
+            System.out.println("Producto agregado al pedido.");
+
+
+            System.out.print("¿Desea agregar otro producto al pedido? (s/n): ");
+            entrada.nextLine();
+            String continuar = entrada.nextLine().trim().toLowerCase();
+            if (!continuar.equals("s")) {
+                seguirAgregando = false;
+            }
+        }
+
+        if (nuevoPedido.getTotal() > 0) {
+            pedidos.add(nuevoPedido);
+            System.out.println("✅ Pedido creado exitosamente.");
+        } else {
+            System.out.println("❌ Pedido vacío. No se guardó.");
+        }
+    }
+
+
+    // LISTAR PEDIDOS
+    private static void listarPedidos(ArrayList<Pedido> pedidos) {
+        if (pedidos.isEmpty()) {
+            System.out.println("No hay pedidos realizados.");
+            return;
+        }
+
+        System.out.println("===== LISTA DE PEDIDOS =====");
+
+        int contador = 1;
+        for (Pedido pedido : pedidos) {
+            System.out.println("Pedido #" + contador);
+            pedido.mostrarPedido();
+            System.out.println("------------------------------");
+            contador++;
+        }
     }
 }
